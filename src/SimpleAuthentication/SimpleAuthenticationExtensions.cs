@@ -30,13 +30,14 @@ public static class SimpleAuthenticationExtensions
     /// <param name="services">The <see cref="IServiceCollection"/>.</param>
     /// <param name="configuration">The <see cref="IConfiguration"/> being bound.</param>
     /// <param name="sectionName">The name of the configuration section that holds authentication settings (default: Authentication).</param>
+    /// <param name="setupAction"> The <see cref="SimpleAuthenticationOptions"/> configuration</param>
     /// <returns>A <see cref="ISimpleAuthenticationBuilder"/> that can be used to further customize authentication.</returns>
     /// <exception cref="ArgumentException">Configuration is invalid.</exception>
     /// <exception cref="ArgumentNullException">One or more required configuration settings are missing.</exception>
     /// <seealso cref="IServiceCollection"/>
     /// <seealso cref="IConfiguration"/>
     /// <seealso cref="ISimpleAuthenticationBuilder"/>
-    public static ISimpleAuthenticationBuilder AddSimpleAuthentication(this IServiceCollection services, IConfiguration configuration, string sectionName = "Authentication")
+    public static ISimpleAuthenticationBuilder AddSimpleAuthentication(this IServiceCollection services, IConfiguration configuration, string sectionName = "Authentication", Action<SimpleAuthenticationOptions> setupAction = null)
     {
         var defaultAuthenticationScheme = configuration.GetValue<string>($"{sectionName}:DefaultScheme");
 
@@ -46,7 +47,7 @@ public static class SimpleAuthenticationExtensions
             options.DefaultChallengeScheme = defaultAuthenticationScheme;
         });
 
-        return builder.AddSimpleAuthentication(configuration, sectionName);
+        return builder.AddSimpleAuthentication(configuration, sectionName, setupAction);
     }
 
     /// <summary>
@@ -55,17 +56,24 @@ public static class SimpleAuthenticationExtensions
     /// <param name="builder">The <see cref="AuthenticationBuilder"/>.</param>
     /// <param name="configuration">The <see cref="IConfiguration"/> being bound.</param>
     /// <param name="sectionName">The name of the configuration section that holds authentication settings (default: Authentication).</param>
+    /// <param name="setupAction"> The <see cref="SimpleAuthenticationOptions"/> configuration</param>
     /// <returns>A <see cref="ISimpleAuthenticationBuilder"/> that can be used to further customize authentication.</returns>
     /// <exception cref="ArgumentException">Configuration is invalid.</exception>
     /// <exception cref="ArgumentNullException">One or more required configuration settings are missing.</exception>
     /// <seealso cref="AuthenticationBuilder"/>
     /// <seealso cref="IConfiguration"/>
     /// <seealso cref="ISimpleAuthenticationBuilder"/>
-    public static ISimpleAuthenticationBuilder AddSimpleAuthentication(this AuthenticationBuilder builder, IConfiguration configuration, string sectionName = "Authentication")
+    public static ISimpleAuthenticationBuilder AddSimpleAuthentication(this AuthenticationBuilder builder, IConfiguration configuration, string sectionName = "Authentication", Action<SimpleAuthenticationOptions> setupAction = null)
     {
         CheckAddJwtBearer(builder, configuration.GetSection($"{sectionName}:JwtBearer"));
         CheckAddApiKey(builder, configuration.GetSection($"{sectionName}:ApiKey"));
         CheckAddBasicAuthentication(builder, configuration.GetSection($"{sectionName}:Basic"));
+
+        if (setupAction != null)
+        {
+            builder.Services.Configure(setupAction);
+
+        }
 
         return new DefaultSimpleAuthenticationBuilder(configuration, builder);
 
@@ -101,6 +109,7 @@ public static class SimpleAuthenticationExtensions
 
             if (settings.EnableJwtBearerService)
             {
+                builder.Services.Configure<JwtBearerService>(section);
                 builder.Services.TryAddSingleton<IJwtBearerService, JwtBearerService>();
             }
         }
@@ -171,7 +180,7 @@ public static class SimpleAuthenticationExtensions
                 options.UserName = settings.UserName;
                 options.Password = settings.Password;
             });
-        }
+        }        
     }
 
     /// <summary>

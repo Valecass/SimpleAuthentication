@@ -53,4 +53,9 @@ public class JwtBearerSettings
     /// </summary>
     /// <seealso cref="IJwtBearerService"/>
     public bool EnableJwtBearerService { get; set; } = true;
+
+    /// <summary>
+    /// Enable the generation of the refresh token 
+    /// </summary>
+    public bool EnableRefreshToken { get; set; } = false;
 }

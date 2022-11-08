@@ -8,7 +8,26 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
 
-builder.Services.AddSimpleAuthentication(builder.Configuration);
+builder.Services.AddSimpleAuthentication(builder.Configuration, setupAction: options =>
+{
+    options.CreateAndGetRefreshTokenMethod = async (username) =>
+    {
+        await Task.Delay(100);
+        //create refresh token
+        //store refresh token
+
+        //in this sample we return the username as the refresh token
+        return username;
+    };
+
+    options.VerifyRefreshTokenMethod = async (refreshToken, userName) =>
+    {
+        //verify refresk token
+        await Task.Delay(100);
+        //in this sample refresh token has to be the username
+        return refreshToken == userName;
+    };
+});
 
 //builder.Services.AddAuthorization(options =>
 //{
@@ -34,6 +53,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSimpleAuthentication(builder.Configuration);
+    
 });
 
 var app = builder.Build();

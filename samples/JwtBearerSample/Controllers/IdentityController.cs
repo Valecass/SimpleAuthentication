@@ -32,7 +32,25 @@ public class AuthController : ControllerBase
         };
 
         var token = jwtBearerService.CreateToken(loginRequest.UserName, claims, absoluteExpiration: expiration);
-        return new LoginResponse(token);
+        return new LoginResponse(token, string.Empty);
+    }
+
+    [HttpPost("loginWithRefreshToken")]
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+    [ProducesDefaultResponseType]
+    public async Task<ActionResult<LoginResponse>> LoginWIthRefreshTokenAsync(LoginRequest loginRequest, DateTime? expiration = null)
+    {
+        // Check for login rights...
+
+        // Add custom claims (optional).
+        var claims = new List<Claim>
+    {
+        new(ClaimTypes.GivenName, "Marco"),
+        new(ClaimTypes.Surname, "Minerva")
+    };
+
+        var tokens = await jwtBearerService.CreateTokenAndRefreshTokenAsync(loginRequest.UserName, claims, absoluteExpiration: expiration);
+        return new LoginResponse(tokens.token, tokens.refreshToken);
     }
 
     [HttpPost("validate")]
@@ -56,12 +74,21 @@ public class AuthController : ControllerBase
     public ActionResult<LoginResponse> Refresh(string token, bool validateLifetime = true, DateTime? expiration = null)
     {
         var newToken = jwtBearerService.RefreshToken(token, validateLifetime, expiration);
-        return new LoginResponse(newToken);
+        return new LoginResponse(newToken, string.Empty);
+    }
+
+    [HttpPost("refreshWithRefreshToken")]
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+    [ProducesDefaultResponseType]
+    public async Task<ActionResult<LoginResponse>> RefreshWithRefreshTokenAsync(string token, string refreshToken, DateTime? expiration = null)
+    {
+        var newToken = await jwtBearerService.RefreshTokenAsync(token, refreshToken, expiration);
+        return new LoginResponse(newToken.token, newToken.refreshToken);
     }
 }
 
 public record class LoginRequest(string UserName, string Password);
 
-public record class LoginResponse(string Token);
+public record class LoginResponse(string Token, string RefreshToken);
 
 public record class ValidationResponse(bool IsValid, User? User);
