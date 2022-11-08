@@ -38,7 +38,7 @@ public class AuthController : ControllerBase
     [HttpPost("loginWithRefreshToken")]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesDefaultResponseType]
-    public async Task<ActionResult<LoginResponse>> LoginWIthRefreshTokenAsync(LoginRequest loginRequest, DateTime? expiration = null)
+    public async Task<ActionResult<LoginResponse>> LoginWithRefreshTokenAsync(LoginRequest loginRequest, DateTime? expiration = null)
     {
         // Check for login rights...
 
